@@ -32,12 +32,11 @@ export interface ChatEntry {
 }
 
 export interface StreamingChunk {
-  type: "content" | "tool_calls" | "tool_result" | "done" | "token_count";
+  type: "content" | "tool_calls" | "tool_result" | "done";
   content?: string;
   toolCalls?: GrokToolCall[];
   toolCall?: GrokToolCall;
   toolResult?: ToolResult;
-  tokenCount?: number;
 }
 
 export class GrokAgent extends EventEmitter {
@@ -407,19 +406,8 @@ Current working directory: ${process.cwd()}`,
     this.chatHistory.push(userEntry);
     this.messages.push({ role: "user", content: message });
 
-    // Calculate input tokens
-    let inputTokens = this.tokenCounter.countMessageTokens(
-      this.messages as any
-    );
-    yield {
-      type: "token_count",
-      tokenCount: inputTokens,
-    };
-
     const maxToolRounds = this.maxToolRounds; // Prevent infinite loops
     let toolRounds = 0;
-    let totalOutputTokens = 0;
-    let lastTokenUpdate = 0;
 
     try {
       // Agent loop - continue until no more tool calls or max rounds reached
@@ -483,30 +471,10 @@ Current working directory: ${process.cwd()}`,
           if (chunk.choices[0].delta?.content) {
             accumulatedContent += chunk.choices[0].delta.content;
 
-            // Update token count in real-time including accumulated content and any tool calls
-            const currentOutputTokens =
-              this.tokenCounter.estimateStreamingTokens(accumulatedContent) +
-              (accumulatedMessage.tool_calls
-                ? this.tokenCounter.countTokens(
-                    JSON.stringify(accumulatedMessage.tool_calls)
-                  )
-                : 0);
-            totalOutputTokens = currentOutputTokens;
-
             yield {
               type: "content",
               content: chunk.choices[0].delta.content,
             };
-
-            // Emit token count update
-            const now = Date.now();
-            if (now - lastTokenUpdate > 250) {
-              lastTokenUpdate = now;
-              yield {
-                type: "token_count",
-                tokenCount: inputTokens + totalOutputTokens,
-              };
-            }
         }
       }
 
@@ -578,16 +546,6 @@ Current working directory: ${process.cwd()}`,
               tool_call_id: toolCall.id,
             });
           }
-
-          // Update token count after processing all tool calls to include tool results
-          inputTokens = this.tokenCounter.countMessageTokens(
-            this.messages as any
-          );
-          // Final token update after tools processed
-          yield {
-            type: "token_count",
-            tokenCount: inputTokens + totalOutputTokens,
-          };
 
           // Continue the loop to get the next response (which might have more tool calls)
         } else {

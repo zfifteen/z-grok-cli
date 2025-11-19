@@ -32,7 +32,6 @@ function ChatInterfaceWithAgent({
   const [chatHistory, setChatHistory] = useState<ChatEntry[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingTime, setProcessingTime] = useState(0);
-  const [tokenCount, setTokenCount] = useState(0);
   const [isStreaming, setIsStreaming] = useState(false);
   const [confirmationOptions, setConfirmationOptions] =
     useState<ConfirmationOptions | null>(null);
@@ -57,7 +56,6 @@ function ChatInterfaceWithAgent({
     setChatHistory,
     setIsProcessing,
     setIsStreaming,
-    setTokenCount,
     setProcessingTime,
     processingStartTime,
     isProcessing,
@@ -146,11 +144,6 @@ function ChatInterfaceWithAgent({
                       )
                     );
                   }
-                }
-                break;
-              case "token_count":
-                if (chunk.tokenCount !== undefined) {
-                  setTokenCount(chunk.tokenCount);
                 }
                 break;
               case "tool_calls":
@@ -283,7 +276,6 @@ function ChatInterfaceWithAgent({
     // Reset processing states when operation is cancelled
     setIsProcessing(false);
     setIsStreaming(false);
-    setTokenCount(0);
     setProcessingTime(0);
     processingStartTime.current = 0;
   };
@@ -343,7 +335,6 @@ function ChatInterfaceWithAgent({
           <LoadingSpinner
             isActive={isProcessing || isStreaming}
             processingTime={processingTime}
-            tokenCount={tokenCount}
           />
 
           <ChatInput

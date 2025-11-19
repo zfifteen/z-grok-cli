@@ -13,7 +13,6 @@ interface UseInputHandlerProps {
   setChatHistory: React.Dispatch<React.SetStateAction<ChatEntry[]>>;
   setIsProcessing: (processing: boolean) => void;
   setIsStreaming: (streaming: boolean) => void;
-  setTokenCount: (count: number) => void;
   setProcessingTime: (time: number) => void;
   processingStartTime: React.MutableRefObject<number>;
   isProcessing: boolean;
@@ -36,7 +35,6 @@ export function useInputHandler({
   setChatHistory,
   setIsProcessing,
   setIsStreaming,
-  setTokenCount,
   setProcessingTime,
   processingStartTime,
   isProcessing,
@@ -91,7 +89,6 @@ export function useInputHandler({
         agent.abortCurrentOperation();
         setIsProcessing(false);
         setIsStreaming(false);
-        setTokenCount(0);
         setProcessingTime(0);
         processingStartTime.current = 0;
         return true;
@@ -242,7 +239,6 @@ export function useInputHandler({
       // Reset processing states
       setIsProcessing(false);
       setIsStreaming(false);
-      setTokenCount(0);
       setProcessingTime(0);
       processingStartTime.current = 0;
 
@@ -644,12 +640,6 @@ Respond with ONLY the commit message, no additional text.`;
                   )
                 );
               }
-            }
-            break;
-
-          case "token_count":
-            if (chunk.tokenCount !== undefined) {
-              setTokenCount(chunk.tokenCount);
             }
             break;
 
